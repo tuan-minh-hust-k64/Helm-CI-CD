@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-deployment
+spec:
+  selector:
+    matchLabels:
+      app: client-deployment
+  template:
+    metadata:
+      labels:
+        app: client-deployment
+    spec:
+      containers:
+      - name: client-deployment
+        image: {{ .Values.clientDeployment.imageClient }}
+        resources:
+          limits:
+            memory: {{ .Values.clientDeployment.limits.memory }}
+            cpu: {{ .Values.clientDeployment.limits.cpu }}
+        ports:
+        - containerPort: {{ .Values.clientDeployment.ports.containerPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-service
+spec:
+  selector:
+    app: client-deployment
+  ports:
+  - port: {{ .Values.clientDeployment.ports.containerPort }}
+    targetPort: {{ .Values.clientDeployment.ports.containerPort }}
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-deployment
+spec:
+  selector:
+    matchLabels:
+      app: server-deployment
+  template:
+    metadata:
+      labels:
+        app: server-deployment
+    spec:
+      containers:
+      - name: server-deployment
+        image: {{ .Values.serverDeployment.imageServer }}
+        resources:
+          limits:
+            memory: {{ .Values.serverDeployment.limits.memory }}
+            cpu: {{ .Values.serverDeployment.limits.cpu }}
+        env:
+          - name: DB_URL
+            value: mongodb://mongo-service
+        ports:
+        - containerPort: {{ .Values.serverDeployment.ports.containerPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-service
+spec:
+  selector:
+    app: server-deployment
+  ports:
+  - port: {{ .Values.serverDeployment.ports.containerPort }}
+    targetPort: {{ .Values.serverDeployment.ports.containerPort }}
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: {{ .Values.mongoDeployment.imageMongo }}
+        volumeMounts:
+          - mountPath: /data/db
+            name: mongo-persistent-storage
+        resources:
+          limits:
+            memory: {{ .Values.mongoDeployment.limits.memory }}
+            cpu: {{ .Values.mongoDeployment.limits.cpu }}
+        ports:
+        - containerPort: {{ .Values.mongoDeployment.ports.containerPort }}
+        env:
+          - name: MONGO_INITDB_ROOT_USERNAME
+            value: ""
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            value: ""
+      volumes:
+        - name: mongo-persistent-storage
+          persistentVolumeClaim:
+            claimName: database-pvc

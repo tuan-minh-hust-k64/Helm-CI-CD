@@ -1,0 +1,21 @@
+clientDeployment:
+  imageClient: yyy
+  limits:
+    memory: "128Mi"
+    cpu: "500m"
+  ports:
+    containerPort: 80
+serverDeployment:
+  imageServer: yyy
+  limits:
+    memory: "128Mi"
+    cpu: "500m"
+  ports:
+    containerPort: 3001
+mongoDeployment:
+  imageMongo: yyy
+  limits:
+    memory: "500Mi"
+    cpu: "500m"
+  ports:
+    containerPort: 3001
